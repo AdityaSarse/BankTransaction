@@ -38,6 +38,12 @@ async function registerUserController(req, res) {
         },
         token
     })
+
+    try {
+        await sendRegistrationEmail(user.email, user.name);
+    } catch (error) {
+        console.error("Failed to send registration email:", error);
+    }
 }
 
 async function loginUserController(req, res) {
@@ -79,8 +85,6 @@ async function loginUserController(req, res) {
         },
         token
     })
-
-    await sendRegistrationEmail(email, name);
 }
 
 module.exports = {
