@@ -67,6 +67,18 @@ async function createTransaction(req, res) {
         })
     }
 
+    /*4. drive balance*/
+
+    const fromUserBalance = await fromUserAccount.getBalance()
+    const toUserBalance = await toUserAccount.getBalance()
+
+    if (fromUserBalance < amount) {
+        return res.status(400).json({
+            message: "Insufficient balance",
+            success: false
+        })
+    }
+
 
 }
 
