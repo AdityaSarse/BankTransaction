@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const transactionModel = require("../models/transaction.model")
 const ladgerModel = require("../models/ladger.model")
 const accountModel = require("../models/account.model")
-
 async function createTransaction(req, res) {
 
     const { fromAccount, toAccount, amount, idemponencyKey } = req.body;
