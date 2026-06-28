@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true,
@@ -23,25 +23,25 @@ const userSchema = mongoose.Schema({
     },
     password: {
         type: String,
-        require: [true,
+        required: [true,
             "Password is required..!"
         ],
-        minlenght: [8, "Minimum lenght should be 8"],
+        minlength: [8, "Minimum length should be 8"],
         select: false ///by default password iss not fetch for each query
     },
 
 })
 
-userSchema.pre("save", async function(next) {
-    if (!this.isModified(password)) {
-        return next();
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) {
+        return;
     }
     const hash = await bcrypt.hash(this.password, 10)
-    this.paswword = hash;
-    return next();
+    this.password = hash;
+    return;
 })
 
-userSchema.method.comparePassword = async function(password) {
+userSchema.methods.comparePassword = async function (password) {
 
     return await bcrypt.compare(password, this.password)
 
