@@ -59,6 +59,14 @@ async function createTransaction(req, res) {
         })
     }
 
+    /*3. check Accoutn status */
+    if (fromUserAccount.status !== "ACTIVE" || toUserAccount.status !== "ACTIVE") {
+        return res.status(400).json({
+            message: "Account not active",
+            success: false
+        })
+    }
+
 
 }
 
