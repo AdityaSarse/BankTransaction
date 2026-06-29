@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
         minlength: [8, "Minimum length should be 8"],
         select: false ///by default password iss not fetch for each query
     },
+    systemUser: {
+        type: Boolean,
+        default: false,
+        immutable: true
+    }
 
 })
 
