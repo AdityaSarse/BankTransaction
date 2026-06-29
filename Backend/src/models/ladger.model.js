@@ -30,14 +30,18 @@ const ladgerSchema = new mongoose.Schema({
     timestamps: true
 })
 
-function preventLadgerModifcation() {
-    throw new Error("Ladger should not be modified")
+function preventLadgerModifcation(next) {
+    next(new Error("Ladger should not be modified"));
 }
 
-ladgerSchema.pre("save", preventLadgerModifcation)
+ladgerSchema.pre("save", function (next) {
+    if (!this.isNew) {
+        return next(new Error("Ladger should not be modified"));
+    }
+    next();
+});
 ladgerSchema.pre("update", preventLadgerModifcation)
 ladgerSchema.pre("updateOne", preventLadgerModifcation)
-ladgerSchema.pre("find", preventLadgerModifcation)
 ladgerSchema.pre("findOneAndUpdate", preventLadgerModifcation)
 ladgerSchema.pre("remove", preventLadgerModifcation)
 ladgerSchema.pre("delete", preventLadgerModifcation)
