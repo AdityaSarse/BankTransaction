@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken")
-const sendRegistrationEmail = require("../services/email.services")
+const { sendRegistrationEmail } = require("../services/email.services")
 
 
 async function registerUserController(req, res) {
