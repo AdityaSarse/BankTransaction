@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const transactionModel = require("../models/transaction.model")
 const ladgerModel = require("../models/ladger.model")
 const accountModel = require("../models/account.model")
+const mongoose = require("mongoose")
 async function createTransaction(req, res) {
 
     const { fromAccount, toAccount, amount, idemponencyKey } = req.body;
@@ -77,68 +78,66 @@ async function createTransaction(req, res) {
             success: false
         })
     }
+    /*5.create transaction PENDING*/
 
-
-}
-
-async function transferMoney(req, res) {
     const session = await mongoose.startSession();
 
     session.startTransaction();
 
-    try {
-        const { toAccount, amount } = req.body;
-        const fromAccount = req.user.account.id;
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        amount,
+        idemponencyKey,
+        status: "PENDING"
+    }, {
+        session
+    })
 
-        if (!toAccount || !amount) {
-            return res.status(400).json({
-                message: "Missing required fields",
-                success: false
-            })
-        }
+    const debitLadger = await ladgerModel.create({
+        accountId: fromAccount,
+        amount: -amount,
+        transactionId: transaction._id,
 
-        const fromAccountDoc = await accountModel.findById(fromAccount).session(session);
-        const toAccountDoc = await accountModel.findById(toAccount).session(session);
+    }, {
+        session
+    })
 
-        if (!fromAccountDoc || !toAccountDoc) {
-            await session.abortTransaction();
-            return res.status(404).json({
-                message: "Account not found",
-                success: false
-            })
-        }
+    const creditLadger = await ladgerModel.create({
+        accountId: toAccount,
+        amount: amount,
+        transactionId: transaction._id,
+    }, {
+        session
+    })
 
-        if (fromAccountDoc.balance < amount) {
-            await session.abortTransaction();
-            return res.status(400).json({
-                message: "Insufficient balance",
-                success: false
-            })
-        }
+    transaction.status = "SUCCESS";
+    await transaction.save();
 
-        const transaction = await transactionModel.create({
-            fromAccount,
-            toAccount,
-            amount,
-            status: "PENDING"
-        })
+    await session.commitTransaction();
+    session.endSession();
 
-        await session.commitTransaction();
-        res.status(200).json({
-            message: "Transaction created successfully",
-            success: true,
-            transaction
-        })
+    //send Transaction mail to both users
 
-    } catch (error) {
-        await session.abortTransaction();
-        console.error("Error creating transaction:", error);
-        return res.status(500).json({
-            message: "Failed to create transaction",
-            success: false,
-            error: error.message
-        });
-    } finally {
-        session.endSession();
-    }
+    await emailSerivices.sendEmail({
+        to: fromUserAccount.email,
+        subject: "Transaction successful",
+        text: `Transaction of ${amount} from your account ${fromAccount} to ${toAccount} is successful`,
+    })
+
+    await emailSerivices.sendEmail({
+        to: toUserAccount.email,
+        subject: "Transaction successful",
+        text: `Transaction of ${amount} from ${fromAccount} to your account ${toAccount} is successful`,
+    })
+
+    return res.status(200).json({
+        message: "Transaction created successfully",
+        transaction
+    })
+
+}
+
+module.exports = {
+    createTransaction
 }
