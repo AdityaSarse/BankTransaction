@@ -35,6 +35,19 @@ async function authMiddelware(req, res, next) {
     }
 }
 
+async function adminMiddelware(req, res, next) {
+    authMiddelware(req, res, () => {
+        if (req.user.systemUser) {
+            next()
+        } else {
+            res.status(401).json({
+                message: "Unauthorized"
+            })
+        }
+    })
+}
+
 module.exports = {
-    authMiddelware
+    authMiddelware,
+    adminMiddelware
 }
