@@ -17,7 +17,7 @@ const transactionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["SUCCESS", "FAILED", "PROCESSING", "REVERSED"],
+        enum: ["SUCCESS", "FAILED", "PROCESSING", "REVERSED", "PENDING"],
         default: "PROCESSING"
     },
     idemponencyKey: {
