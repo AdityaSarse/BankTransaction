@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const transactionModel = require("../models/transaction.model")
 const ladgerModel = require("../models/ladger.model")
 const accountModel = require("../models/account.model")
-const mongoose = require("mongoose")
 async function createTransaction(req, res) {
 
     const { fromAccount, toAccount, amount, idemponencyKey } = req.body;
@@ -138,6 +137,79 @@ async function createTransaction(req, res) {
 
 }
 
+async function systemInitalFunds(req, res) {
+    const { amount, toAccount } = req.body;
+
+    const toUserAccount = await accountModel.findOne({
+        _id: toAccount
+    })
+
+    if (!toUserAccount) {
+        return res.status(404).json({
+            message: "Account not found",
+            success: false
+        })
+    }
+
+    const session = await mongoose.startSession();
+
+    session.startTransaction();
+
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        amount,
+        idemponencyKey,
+        status: "PENDING"
+    }, {
+        session
+    })
+
+    const debitLadger = await ladgerModel.create({
+        accountId: fromAccount,
+        amount: -amount,
+        transactionId: transaction._id,
+
+    }, {
+        session
+    })
+
+    const creditLadger = await ladgerModel.create({
+        accountId: toAccount,
+        amount: amount,
+        transactionId: transaction._id,
+    }, {
+        session
+    })
+
+    transaction.status = "SUCCESS";
+    await transaction.save();
+
+    await session.commitTransaction();
+    session.endSession();
+
+    //send Transaction mail to both users
+
+    await emailSerivices.sendEmail({
+        to: fromUserAccount.email,
+        subject: "Transaction successful",
+        text: `Transaction of ${amount} from your account ${fromAccount} to ${toAccount} is successful`,
+    })
+
+    await emailSerivices.sendEmail({
+        to: toUserAccount.email,
+        subject: "Transaction successful",
+        text: `Transaction of ${amount} from ${fromAccount} to your account ${toAccount} is successful`,
+    })
+
+    return res.status(200).json({
+        message: "Transaction created successfully",
+        transaction
+    })
+
+}
+
 module.exports = {
-    createTransaction
+    createTransaction,
+    systemInitalFunds
 }
