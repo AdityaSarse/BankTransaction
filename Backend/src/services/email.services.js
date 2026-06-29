@@ -49,4 +49,7 @@ async function sendRegistrationEmail(userEmail, name) {
 }
 
 
-module.exports = sendRegistrationEmail;
+module.exports = {
+    sendEmail,
+    sendRegistrationEmail
+};
